@@ -8,7 +8,33 @@ stable `main` branch and existing manifest remain untouched.
 This manifest uses Flame's own Nahida vendor snapshot, adapted with the Coral
 fixes. The actual PixelOS product is `custom_flame`.
 
+## Complete build from mkdir (default jobs)
+
+Use a fresh Flame directory, separate from Coral or HeckerOS, with the normal
+Android build dependencies, Repo, Git LFS and Python 3 installed. On ServerHive,
+run this in the provider's initialized Byobu/Tmux/RBE shell and keep RBE enabled.
+Choose this block or the original 8-job block below for a fresh checkout.
+
+```bash
+mkdir -p ~/pixelos-flame &&
+cd ~/pixelos-flame &&
+git lfs install &&
+repo init -u https://github.com/PixelOS-AOSP/android_manifest.git -b seventeen --git-lfs &&
+git clone --branch main --single-branch https://github.com/its-hecker/pixelos-flame-local-manifest.git .repo/local_manifests &&
+repo sync -c --fail-fast --no-clone-bundle --no-tags &&
+env -u PIXEL_BUILD_JOBS PIXEL_BUILD_VARIANT=userdebug bash .repo/local_manifests/build.sh
+```
+
+`env -u PIXEL_BUILD_JOBS` clears an inherited job override for this invocation,
+so `build.sh` uses its default available logical CPU count (`nproc`). The source
+sync also uses Repo's default download parallelism. The helper retains all
+preparation and output checks. ROM output: `out/target/product/flame/PixelOS_*.zip`.
+
 ## Fresh build from mkdir
+
+**8 build jobs:** this original block explicitly sets `PIXEL_BUILD_JOBS=8`.
+Other examples in this guide that set the same variable also use eight build
+jobs; `repo sync -j8` separately controls source downloads.
 
 Run in ServerHive's initialized Byobu/Tmux/RBE shell. **Keep RBE enabled.**
 The host needs normal AOSP dependencies, Repo, Git LFS and Python 3. Use a fresh
